@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MaxValueValidator, MinValueValidator
 from mptt.models import MPTTModel, TreeForeignKey
-
+from colifelabs_management.utils import accounting_display
 
 class FinancialStatement(models.Model):
     name = models.CharField(_("name"), max_length=255)
@@ -16,22 +16,39 @@ class Classification(MPTTModel):
     name = models.CharField(_("name"), max_length=255)
     parent = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='children')
 
-    class MPTTMeta:
-        order_insertion_by = ['name']
+    def accural_budgets_value(self):
+        childrens_v = sum([c.accural_budgets_value() for c in self.children.all()])
+        accounts_v = sum([a.accural_budgets_value() for a in self.accounts.all()])
+        return childrens_v + accounts_v
+  
+    def accural_budgets_value_display(self):
+        v = self.accural_budgets_value()
+
+        return accounting_display(v)
 
     def __str__(self):
         return self.name
+    
+    class MPTTMeta:
+        order_insertion_by = ['name']
 
 
 class Account(models.Model):
     classification = models.ForeignKey(Classification, on_delete=models.SET_NULL, blank=True, null=True, related_name="accounts")
     name = models.CharField(_("name"), max_length=255)
 
-    class MPTTMeta:
-        order_insertion_by = ['name']
+    def accural_budgets_value(self):
+        return sum([t.accural_budgets_value() for t in self.transactions.all()])
+  
+    def accural_budgets_value_display(self):
+        v = self.accural_budgets_value()
+        return accounting_display(v)
 
     def __str__(self):
         return self.name
+
+    class MPTTMeta:
+        order_insertion_by = ['name']
 
 
 class TransactionTag(models.Model):
@@ -44,16 +61,13 @@ class TransactionTag(models.Model):
 class Transaction(models.Model):
     name = models.CharField(_("name"), max_length=255)
     account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name="transactions")
-    tags = models.ManyToManyField(TransactionTag, related_name="transactions")
 
     def accural_budgets_value(self):
         return sum([cp.accural_budgets_value() for cp in self.counter_parties.all()])
 
     def accural_budgets_value_display(self):
-        return f"{self.accural_budgets_value():,}"
-    
-    def tags_display(self):
-        return " - ".join([t.name for t in self.tags])
+        v = self.accural_budgets_value()
+        return f"{v:,}" if v > 0 else f"({abs(v):,})"
 
     def __str__(self):
         return self.name
@@ -62,19 +76,24 @@ class Transaction(models.Model):
 class CounterPartyTransaction(models.Model):
     transaction = models.ForeignKey(Transaction, on_delete=models.PROTECT, related_name="counter_parties")
     counterparty_tag = models.ForeignKey("ecosystem.CounterpartyTag", on_delete=models.PROTECT, related_name="transactions")
+    tags = models.ManyToManyField(TransactionTag, blank=True, related_name="transactions")
 
     def accural_budgets_value(self):
         return sum([bv.value for bv in self.accural_budgets.all()])
 
     def accural_budgets_value_display(self):
-        return f"{self.accural_budgets_value():,}"
+        v = self.accural_budgets_value()
+        return f"{v:,}" if v > 0 else f"({abs(v):,})"
 
+    def tags_display(self):
+        return " - ".join([t.name for t in self.tags.all()])
+    
     def __str__(self):
         return f"{self.transaction.name} {self.counterparty_tag}"
 
 
 class Budget(models.Model):
-    value = models.PositiveBigIntegerField(_("value"))
+    value = models.BigIntegerField(_("value"))
     month = models.PositiveIntegerField(_("month"), validators=[MaxValueValidator(12), MinValueValidator(1)])
     year = models.PositiveIntegerField(_("year"))
 
@@ -84,7 +103,8 @@ class Budget(models.Model):
         return f"{self.year}{converted_month}"
     
     def value_display(self):
-        return f"{self.value:,}"
+        v = self.value
+        return f"{v:,}" if v > 0 else f"({abs(v):,})"
 
     class Meta:
         abstract = True
@@ -97,14 +117,19 @@ class AccuralBudget(Budget):
         return self.value - sum([cf.value for cf in self.cash_flows.all()])
 
     def diff_cash_flow_display(self):
-        return f"{self.diff_cash_flow():,}"
+        v = self.diff_cash_flow()
+        return f"{v:,}" if v > 0 else f"({abs(v):,})"
 
     def __str__(self):
-        return f"{self.counter_party_transaction.transaction.account.name} {self.value:,} {self.period()}"
+        # v = self.value
+        # value_display = f"{v:,}" if v > 0 else f"({abs(v):,})"
+        return f"{self.counter_party_transaction.transaction.account.name} {self.period()}"
 
 
 class CashBudget(Budget):
     budget_value = models.ForeignKey(AccuralBudget, on_delete=models.PROTECT, related_name="cash_flows")
 
     def __str__(self):
-        return f"{self.budget_value.counter_party_transaction.transaction.account.name} {self.value:,} {self.period()}"
+        v = self.value
+        value_display = f"{v:,}" if v > 0 else f"({abs(v):,})"
+        return f"{self.budget_value.counter_party_transaction.transaction.account.name} {value_display} {self.period()}"

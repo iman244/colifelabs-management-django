@@ -9,8 +9,9 @@ class CounterpartyTag(models.Model):
         return sum([cpt.accural_budgets_value() for cpt in self.transactions.all()])
     
     def total_accural_budget_display(self):
-        return f"{self.total_accural_budget():,}"
-
+        v = self.total_accural_budget()
+        return f"{v:,}" if v > 0 else f"({abs(v):,})"
+    
     def __str__(self):
         return self.name
 
