@@ -24,4 +24,5 @@ admin.site.site_title = _("Colifelabs")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', admin.site.login),
 ]

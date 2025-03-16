@@ -120,8 +120,6 @@ class AccuralBudget(Budget):
         return accounting_display(v)
 
     def __str__(self):
-        # v = self.value
-        # value_display = accounting_display(v)
         return f"{self.counter_party_transaction.transaction.account.name} {self.period()}"
 
 
