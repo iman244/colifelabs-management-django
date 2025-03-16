@@ -11,19 +11,27 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os, environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+env = environ.Env(
+    # set casting, default value
+    DEBUG=(bool, True)
+)
+# Take environment variables from .env file
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-77vly06%s6nz7j)le$s-ow(3)5v0v^pce%+10l3dud&0ieb(vu'
+SECRET_KEY = os.getenv("SECRET_KEY","django-insecure-77vly06%s6nz7j)le$s-ow(3)5v0v^pce%+10l3dud&0ieb(vu")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = []
 
@@ -78,12 +86,25 @@ WSGI_APPLICATION = 'colifelabs_management.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if os.getenv("USE_CLOUD_DATABASE", "False") == 'True':
+    DATABASES = {
+        'default': {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv('DATABASE_NAME', 'DATABASE_NAME is not set.'),
+            "USER":  os.getenv('DATABASE_USERNAME', 'DATABASE_USERNAME is not set.'),
+            "PASSWORD": os.getenv('DATABASE_PASSWORD_USER', 'DATABASE_PASSWORD_USER is not set.'),
+            "HOST": os.getenv('DATABASE_ENDPOINT', 'DATABASE_ENDPOINT is not set.'),
+            "PORT": os.getenv('DATABASE_PORT', 'DATABASE_PORT is not set.')
+        }
     }
-}
+
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation

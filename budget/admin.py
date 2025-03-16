@@ -49,8 +49,8 @@ class CounterPartyTransactionInline(admin.TabularInline):
 @admin.register(CounterPartyTransaction)
 class CounterPartyTransactionAdmin(admin.ModelAdmin):
     readonly_fields = ('accural_budgets_value_display',)
-    fields = ('transaction', 'counterparty_tag', 'tags', 'accural_budgets_value_display')
-    list_display = ['transaction', 'counterparty_tag', 'accural_budgets_value_display', 'tags_display']
+    fields = ('transaction', 'counterparty', 'tags', 'accural_budgets_value_display')
+    list_display = ['transaction', 'counterparty', 'accural_budgets_value_display', 'tags_display']
     inlines = [AccuralBudgetInline]
     filter_horizontal = ['tags']
 

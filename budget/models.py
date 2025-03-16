@@ -23,7 +23,6 @@ class Classification(MPTTModel):
   
     def accural_budgets_value_display(self):
         v = self.accural_budgets_value()
-
         return accounting_display(v)
 
     def __str__(self):
@@ -67,7 +66,7 @@ class Transaction(models.Model):
 
     def accural_budgets_value_display(self):
         v = self.accural_budgets_value()
-        return f"{v:,}" if v > 0 else f"({abs(v):,})"
+        return accounting_display(v)
 
     def __str__(self):
         return self.name
@@ -75,7 +74,7 @@ class Transaction(models.Model):
 
 class CounterPartyTransaction(models.Model):
     transaction = models.ForeignKey(Transaction, on_delete=models.PROTECT, related_name="counter_parties")
-    counterparty_tag = models.ForeignKey("ecosystem.CounterpartyTag", on_delete=models.PROTECT, related_name="transactions")
+    counterparty = models.ForeignKey("ecosystem.Counterparty", on_delete=models.PROTECT, related_name="transactions")
     tags = models.ManyToManyField(TransactionTag, blank=True, related_name="transactions")
 
     def accural_budgets_value(self):
@@ -83,17 +82,17 @@ class CounterPartyTransaction(models.Model):
 
     def accural_budgets_value_display(self):
         v = self.accural_budgets_value()
-        return f"{v:,}" if v > 0 else f"({abs(v):,})"
+        return accounting_display(v)
 
     def tags_display(self):
         return " - ".join([t.name for t in self.tags.all()])
     
     def __str__(self):
-        return f"{self.transaction.name} {self.counterparty_tag}"
+        return f"{self.transaction.name} {self.counterparty}"
 
 
 class Budget(models.Model):
-    value = models.BigIntegerField(_("value"))
+    value = models.BigIntegerField(_("value"), default=0)
     month = models.PositiveIntegerField(_("month"), validators=[MaxValueValidator(12), MinValueValidator(1)])
     year = models.PositiveIntegerField(_("year"))
 
@@ -104,7 +103,7 @@ class Budget(models.Model):
     
     def value_display(self):
         v = self.value
-        return f"{v:,}" if v > 0 else f"({abs(v):,})"
+        return accounting_display(v)
 
     class Meta:
         abstract = True
@@ -118,11 +117,11 @@ class AccuralBudget(Budget):
 
     def diff_cash_flow_display(self):
         v = self.diff_cash_flow()
-        return f"{v:,}" if v > 0 else f"({abs(v):,})"
+        return accounting_display(v)
 
     def __str__(self):
         # v = self.value
-        # value_display = f"{v:,}" if v > 0 else f"({abs(v):,})"
+        # value_display = accounting_display(v)
         return f"{self.counter_party_transaction.transaction.account.name} {self.period()}"
 
 
@@ -131,5 +130,5 @@ class CashBudget(Budget):
 
     def __str__(self):
         v = self.value
-        value_display = f"{v:,}" if v > 0 else f"({abs(v):,})"
+        value_display = accounting_display(v)
         return f"{self.budget_value.counter_party_transaction.transaction.account.name} {value_display} {self.period()}"
