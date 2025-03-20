@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 
 from django.utils.translation import gettext_lazy as _
 
@@ -24,5 +24,6 @@ admin.site.site_title = _("Colifelabs")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('budgets/', include('budget.urls')),
     path('', admin.site.login),
 ]

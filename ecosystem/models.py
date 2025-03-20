@@ -1,16 +1,18 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from colifelabs_management.utils import accounting_display
 
-# Create your models here.
+
 class CounterpartyTag(models.Model):
     name = models.CharField(_("name"), max_length=255)
 
+    @property
     def total_accural_budget(self):
-        return sum([cpt.accural_budgets_value() for cpt in self.transactions.all()])
+        return sum([cpt.accural_budgets_value for cpt in self.transactions.all()])
     
+    @property
     def total_accural_budget_display(self):
-        v = self.total_accural_budget()
-        return f"{v:,}" if v > 0 else f"({abs(v):,})"
+        return accounting_display(self.total_accural_budget)
     
     def __str__(self):
         return self.name

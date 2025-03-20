@@ -6,7 +6,7 @@ from django.db.models import Sum
 
 
 @admin.register(FinancialStatement)
-class FinancialStatementAdmin(admin.ModelAdmin):
+class BudgetFinancialStatementAdmin(admin.ModelAdmin):
     pass
 
 
@@ -33,7 +33,7 @@ class AccuralBudgetAdmin(admin.ModelAdmin):
 
     @admin.display(boolean=True)
     def does_cash_flow_is_correct(self, obj):
-        return obj.diff_cash_flow() == 0
+        return obj.diff_cash_flow == 0
 
 
 class AccuralBudgetInline(admin.TabularInline):
