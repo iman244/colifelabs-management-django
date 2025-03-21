@@ -53,6 +53,7 @@ class CounterPartyTransactionAdmin(admin.ModelAdmin):
     list_display = ['transaction', 'counterparty', 'accural_budgets_value_display', 'tags_display']
     inlines = [AccuralBudgetInline]
     filter_horizontal = ['tags']
+    list_filter = ['transaction']
 
     def changelist_view(self, request, extra_context=None):
         # Call the superclass to get the default context
