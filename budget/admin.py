@@ -53,7 +53,7 @@ class CounterPartyTransactionAdmin(admin.ModelAdmin):
     list_display = ['transaction', 'counterparty', 'accural_budgets_value_display', 'tags_display']
     inlines = [AccuralBudgetInline]
     filter_horizontal = ['tags']
-    list_filter = ['transaction']
+    list_filter = ['transaction', 'counterparty']
 
     def changelist_view(self, request, extra_context=None):
         # Call the superclass to get the default context
@@ -67,7 +67,7 @@ class CounterPartyTransactionAdmin(admin.ModelAdmin):
                 total = cl.queryset.aggregate(total=Sum('accural_budgets__value'))['total'] or 0
 
                 # Add the total to the template context
-                response.context_data['total'] = f"{total:,}" if total > 0 else f"({abs(total)})"
+                response.context_data['total'] = f"{total:,}" if total > 0 else f"({abs(total):,})"
             
             return response
         except:
@@ -96,7 +96,7 @@ class TransactionAdmin(admin.ModelAdmin):
                 total = cl.queryset.aggregate(total=Sum('counter_parties__accural_budgets__value'))['total'] or 0
 
                 # Add the total to the template context
-                response.context_data['total'] = f"{total:,}" if total > 0 else f"({abs(total)})"
+                response.context_data['total'] = f"{total:,}" if total > 0 else f"({abs(total):,})"
             
             return response
         except:

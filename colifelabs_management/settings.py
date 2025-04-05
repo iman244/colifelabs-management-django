@@ -88,6 +88,7 @@ WSGI_APPLICATION = 'colifelabs_management.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 if os.getenv("USE_CLOUD_DATABASE", "False") == 'True':
+    print("USER DATABASE: ", os.getenv('DATABASE_ENDPOINT'), os.getenv('DATABASE_NAME'))
     DATABASES = {
         'default': {
             "ENGINE": "django.db.backends.postgresql",
