@@ -4,7 +4,7 @@ from colifelabs_management.utils import accounting_display
 
 
 class CounterpartyTag(models.Model):
-    name = models.CharField(_("name"), max_length=255)
+    name = models.CharField(_("name"), max_length=255, unique=True)
 
     @property
     def total_accural_budget(self):
@@ -20,7 +20,7 @@ class CounterpartyTag(models.Model):
 
 class Counterparty(models.Model):
     tag = models.ForeignKey(CounterpartyTag, on_delete=models.SET_NULL, blank=True, null=True, related_name="counterparties")
-    name = models.CharField(_("name"), max_length=255)
+    name = models.CharField(_("name"), max_length=255, unique=True)
 
     @property
     def total_accural_budget(self):
